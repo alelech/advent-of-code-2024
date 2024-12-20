@@ -12,8 +12,8 @@ fun main() {
 //
 //    println("part2_small(expected )=${Day17.part2(inputSmall)}")
 //    println("part2_small2(expected )=${Day17.part2(inputSmall2)}")
-//    println("part2(expected )=${Day17.part2(input)}")
-    println("partX(expected )=${Day17.partX(input)}")
+    println("part2(expected 105706277661082)=${Day17.part2(input)}")
+//    println("partX(expected )=${Day17.partX(input)}")
 }
 
 object Day17 {
@@ -90,10 +90,10 @@ object Day17 {
         val rc = input[2].substringAfter("C:").trim().toLong()
         val program = input[4].substringAfter(":").trim().split(',').map { it.toLong() }
 
-        val start = 2.0.pow((program.size - 1) * 3).toLong() //35184372088832L
-        val max = 2.0.pow(program.size * 3).toLong()//281474976710656L
+        val start = 2L shl ((program.size - 1) * 3) //35184372088832L
+        val max = 2L shl (program.size * 3)//281474976710656L
 
-        val pows = (1..14).map { 2.0.pow(it * 3).toLong() }.reversed()
+        val pows = (1..14).map { 2L shl (it * 3) }.reversed()
 
         var ranges = listOf(start..max)
 

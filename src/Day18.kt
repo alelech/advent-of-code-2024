@@ -1,12 +1,12 @@
 import java.util.*
 import java.util.ArrayDeque
-import kotlin.math.pow
 
 fun main() {
     val dataPrefix = "Day18"
     val input = readInput(dataPrefix)
     val inputSmall = readInput("${dataPrefix}_small")
-//    val inputSmall2 = readInput("${dataPrefix}_small2")
+
+//    val inputSmall2 = reaInput("${dataPrefix}_small2")
 
 //    println("part1_small(expected )=${Day18.part1(inputSmall)}")
 //    println("part1_small2(expected )=${Day18.part1(inputSmall2)}")

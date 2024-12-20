@@ -1,5 +1,9 @@
 import java.util.ArrayDeque
+import java.util.Comparator
 import java.util.Deque
+import java.util.PriorityQueue
+import java.util.Queue
+import kotlin.math.abs
 import kotlin.math.hypot
 
 fun main() {
@@ -8,9 +12,9 @@ fun main() {
     val inputSmall = readInput("${dataPrefix}_small")
     val inputSmall2 = readInput("${dataPrefix}_small2")
 
-    println("part1_small(expected 7036)=${Day16.part1(inputSmall)}")
+//    println("part1_small(expected 7036)=${Day16.part1(inputSmall)}")
 //    println("part1_small2(expected 11048)=${Day16.part1(inputSmall2)}")
-    println("part1(expected 135512)=${Day16.part1(input)}")
+//    println("part1(expected 135512)=${Day16.part1(input)}")
 //
     println("part2_small(expected 45)=${Day16.part2(inputSmall)}")
 //    println("part2_small2(expected )=${Day16.part2(inputSmall2)}")
@@ -30,9 +34,7 @@ object Day16 {
         "start=$start".println()
         "ends=$end".println()
 
-        val (_, distMap) = dijkstra(input, start)
-
-        return distMap[end]!!
+        return dijkstra2(input, start, end)
     }
 
     fun part2(input: List<String>): Int {
@@ -41,31 +43,7 @@ object Day16 {
         "start=$start".println()
         "ends=$end".println()
 
-        val (prevMap, distMap) = dijkstra(input, start)
-
-        return backtrackAllPaths(input, prevMap, distMap, start, end).flatMap { it }.distinct().count()
-    }
-
-    fun backtrackAllPaths(
-        input: List<String>,
-        prevMap: Map<Node, Node>,
-        distMap: Map<Node, Int>,
-        start: Node,
-        end: Node
-    ): Sequence<List<Node>> = sequence {
-        val stack: Deque<List<Node>> = ArrayDeque()
-        stack.addLast(listOf(end))
-        while (stack.isNotEmpty()) {
-            val preList = stack.removeLast()
-            val next = preList.last()
-            if (next == start) {
-                yield(preList)
-            } else {
-                next.neighbours(input).forEach { directNei->
-                    directNei.neighbours(input).filterNot { it==next }
-                }
-            }
-        }
+        return dijkstra2(input, start, end, returnCount = true)
     }
 
     fun List<String>.findStart() = findNodeWithValue('S')
@@ -79,6 +57,58 @@ object Day16 {
             }
         }
         throw IllegalArgumentException()
+    }
+
+    private fun List<String>.findPointWithValue(ch: Char): Pair<Int,Int> {
+        forEachIndexed { row, rowStr ->
+            rowStr.forEachIndexed { col, colCh ->
+                if (colCh == ch) return row to col
+            }
+        }
+        throw IllegalArgumentException()
+    }
+
+    fun dijkstra2(
+        input: List<String>,
+        start: Node,
+        end: Node,
+        returnCount:Boolean=false,
+    ): Int {
+        val prevMap = mutableMapOf<Node, Node>()
+        val unvisited = mutableSetOf <Node>()
+        val distMap = input.flatMapIndexed { row, rowStr ->
+            rowStr.mapIndexedNotNull { col, colCh ->
+                if (colCh != '#') {
+                    Node(row, col).also { unvisited.add(it) } to Int.MAX_VALUE
+                } else {
+                    null
+                }
+            }
+        }.toMap().toMutableMap()
+
+        val queue: Queue<Node> = PriorityQueue(Comparator.comparing({distMap[it]!!}))
+        distMap[start] = 0
+        queue.add(start)
+        unvisited.remove(start)
+
+        val shortestPaths = mutableSetOf<Node>()
+        while (queue.isNotEmpty()) {
+            val lastMin = queue.remove()
+            val neighbours = lastMin.neighbours(input)
+
+            neighbours.forEach { next ->
+                val dist = dist(lastMin, next, distMap, prevMap)
+                if (dist <= distMap[next]!!) {
+                    distMap[next] = dist
+                    prevMap[next] = lastMin
+                    queue.add(next)
+                    if(next==end){
+                        buildPath(end,prevMap).forEach { shortestPaths.add(it) }
+                    }
+                }
+            }
+        }
+        return if (returnCount) shortestPaths.size else distMap[end]!!
     }
 
     fun dijkstra(
@@ -122,7 +152,7 @@ object Day16 {
         next: Node,
         distMap: Map<Node, Int>,
         prevMap: Map<Node, Node>
-    ) = distMap[prev]!! + 1 + (wasRotated(prevMap[prev]!!, prev, next) * 1000)
+    ) = distMap[prev]!! + 1 + (wasRotated(prevMap[prev] ?: prev.copy(col = prev.col - 1), prev, next) * 1000)
 
     fun Map<Pair<Int, Int>, Int>.toCsv(input: List<String>) = input.mapIndexed { row, rowStr ->
         rowStr.mapIndexed { col, colCh ->
@@ -158,6 +188,8 @@ object Day16 {
     fun dist(a: Pair<Int, Int>, b: Pair<Int, Int>): Double = b.sub(a).let {
         hypot(it.first.toDouble(), it.second.toDouble())
     }
+
+    fun distN(a: Node, b: Node): Int = abs(b.row-a.row)+abs(b.col-a.col)
 
 
     fun buildPath(end: Pair<Int, Int>, prevMap: Map<Pair<Int, Int>, Pair<Int, Int>>) = buildList<Pair<Int, Int>> {
