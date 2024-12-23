@@ -24,17 +24,19 @@ fun main() {
 //    println("partX(expected )=${Day20.partX(input)}")
 }
 
-data class Pos(
-    val row: Int,
-    val col: Int,
-)
 
-data class Cheat(
-    val start: Pos,
-    val end: Pos,
-)
 
 object Day20 {
+
+    data class Pos(
+        val row: Int,
+        val col: Int,
+    )
+
+    data class Cheat(
+        val start: Pos,
+        val end: Pos,
+    )
 
     fun List<String>.saveAsImage(name: String, map: (Pos) -> Color) {
         val img = BufferedImage(size, first().length, BufferedImage.TYPE_INT_RGB)
